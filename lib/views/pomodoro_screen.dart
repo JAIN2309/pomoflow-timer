@@ -4,6 +4,7 @@ import '../viewmodels/pomodoro_viewmodel.dart';
 import 'widgets/completion_dialog.dart';
 import 'widgets/control_buttons.dart';
 import 'widgets/mode_selector.dart';
+import 'widgets/settings_panel.dart';
 import 'widgets/timer_ring.dart';
 
 class PomodoroScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class PomodoroScreen extends StatefulWidget {
 
 class _PomodoroScreenState extends State<PomodoroScreen> {
   late final PomodoroViewModel _viewModel;
+  bool _showSettings = false;
 
   @override
   void initState() {
@@ -75,23 +77,40 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                     child: Column(
                       children: [
                         const SizedBox(height: 20),
-                        const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(
-                              Icons.timer_outlined,
-                              color: Colors.white54,
-                              size: 20,
+                            const SizedBox(width: 48), // spacer for balance
+                            const Row(
+                              children: [
+                                Icon(
+                                  Icons.timer_outlined,
+                                  color: Colors.white54,
+                                  size: 20,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'POMOFLOW',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 4.0,
+                                    color: Colors.white54,
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(width: 8),
-                            Text(
-                              'POMOFLOW',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 4.0,
-                                color: Colors.white54,
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _showSettings = !_showSettings;
+                                });
+                              },
+                              icon: Icon(
+                                _showSettings ? Icons.close_rounded : Icons.settings_rounded,
+                                color: _showSettings ? accentColor : Colors.white54,
                               ),
+                              tooltip: 'Configure Session Durations',
                             ),
                           ],
                         ),
@@ -101,6 +120,17 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                           onModeSelected: _viewModel.switchMode,
                         ),
                         const Spacer(),
+                        if (_showSettings) ...[
+                          SettingsPanel(
+                            focusMinutes: _viewModel.focusDurationMinutes,
+                            shortBreakMinutes: _viewModel.shortBreakDurationMinutes,
+                            longBreakMinutes: _viewModel.longBreakDurationMinutes,
+                            onFocusMinutesChanged: (val) => _viewModel.updateDuration(PomodoroMode.focus, val),
+                            onShortBreakMinutesChanged: (val) => _viewModel.updateDuration(PomodoroMode.shortBreak, val),
+                            onLongBreakMinutesChanged: (val) => _viewModel.updateDuration(PomodoroMode.longBreak, val),
+                          ),
+                          const Spacer(),
+                        ],
                         TimerRing(
                           secondsRemaining: _viewModel.secondsRemaining,
                           progress: _viewModel.progress,

@@ -5,6 +5,12 @@ import '../models/pomodoro_mode.dart';
 class PomodoroViewModel extends ChangeNotifier {
   Timer? _timer;
   PomodoroMode _currentMode = PomodoroMode.focus;
+  
+  // Custom user durations
+  int _focusDurationMinutes = PomodoroMode.focus.defaultMinutes;
+  int _shortBreakDurationMinutes = PomodoroMode.shortBreak.defaultMinutes;
+  int _longBreakDurationMinutes = PomodoroMode.longBreak.defaultMinutes;
+
   late int _secondsRemaining;
   late int _totalDurationSeconds;
   bool _isRunning = false;
@@ -22,6 +28,46 @@ class PomodoroViewModel extends ChangeNotifier {
   int get totalDurationSeconds => _totalDurationSeconds;
   bool get isRunning => _isRunning;
   double get progress => _totalDurationSeconds > 0 ? _secondsRemaining / _totalDurationSeconds : 0.0;
+
+  int get focusDurationMinutes => _focusDurationMinutes;
+  int get shortBreakDurationMinutes => _shortBreakDurationMinutes;
+  int get longBreakDurationMinutes => _longBreakDurationMinutes;
+
+  int getDurationMinutesForMode(PomodoroMode mode) {
+    switch (mode) {
+      case PomodoroMode.focus:
+        return _focusDurationMinutes;
+      case PomodoroMode.shortBreak:
+        return _shortBreakDurationMinutes;
+      case PomodoroMode.longBreak:
+        return _longBreakDurationMinutes;
+    }
+  }
+
+  void updateDuration(PomodoroMode mode, int minutes) {
+    if (minutes < 1 || minutes > 120) return; // Sane limits: 1 to 120 minutes
+    switch (mode) {
+      case PomodoroMode.focus:
+        _focusDurationMinutes = minutes;
+        break;
+      case PomodoroMode.shortBreak:
+        _shortBreakDurationMinutes = minutes;
+        break;
+      case PomodoroMode.longBreak:
+        _longBreakDurationMinutes = minutes;
+        break;
+    }
+
+    if (_currentMode == mode) {
+      _totalDurationSeconds = minutes * 60;
+      if (!_isRunning) {
+        _secondsRemaining = _totalDurationSeconds;
+      } else {
+        _secondsRemaining = _secondsRemaining.clamp(0, _totalDurationSeconds);
+      }
+    }
+    notifyListeners();
+  }
 
   void startTimer() {
     _timer?.cancel();
@@ -47,6 +93,7 @@ class PomodoroViewModel extends ChangeNotifier {
   void resetTimer() {
     _timer?.cancel();
     _isRunning = false;
+    _totalDurationSeconds = getDurationMinutesForMode(_currentMode) * 60;
     _secondsRemaining = _totalDurationSeconds;
     notifyListeners();
   }
@@ -55,7 +102,7 @@ class PomodoroViewModel extends ChangeNotifier {
     _timer?.cancel();
     _currentMode = mode;
     _isRunning = false;
-    _totalDurationSeconds = mode.defaultMinutes * 60;
+    _totalDurationSeconds = getDurationMinutesForMode(mode) * 60;
     _secondsRemaining = _totalDurationSeconds;
     notifyListeners();
   }
