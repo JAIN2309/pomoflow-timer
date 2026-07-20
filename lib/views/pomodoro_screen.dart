@@ -69,93 +69,106 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
               ),
             ),
             child: SafeArea(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 600),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const SizedBox(width: 48), // spacer for balance
-                            const Row(
-                              children: [
-                                Icon(
-                                  Icons.timer_outlined,
-                                  color: Colors.white54,
-                                  size: 20,
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  'POMOFLOW',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 4.0,
-                                    color: Colors.white54,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: IntrinsicHeight(
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 600),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const SizedBox(width: 48), // spacer for balance
+                                      const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.timer_outlined,
+                                            color: Colors.white54,
+                                            size: 20,
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'POMOFLOW',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 4.0,
+                                              color: Colors.white54,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      IconButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            _showSettings = !_showSettings;
+                                          });
+                                        },
+                                        icon: Icon(
+                                          _showSettings ? Icons.close_rounded : Icons.settings_rounded,
+                                          color: _showSettings ? accentColor : Colors.white54,
+                                        ),
+                                        tooltip: 'Configure Session Durations',
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _showSettings = !_showSettings;
-                                });
-                              },
-                              icon: Icon(
-                                _showSettings ? Icons.close_rounded : Icons.settings_rounded,
-                                color: _showSettings ? accentColor : Colors.white54,
+                                  const Spacer(),
+                                  ModeSelector(
+                                    currentMode: _viewModel.currentMode,
+                                    onModeSelected: _viewModel.switchMode,
+                                  ),
+                                  const Spacer(),
+                                  if (_showSettings) ...[
+                                    SettingsPanel(
+                                      focusMinutes: _viewModel.focusDurationMinutes,
+                                      shortBreakMinutes: _viewModel.shortBreakDurationMinutes,
+                                      longBreakMinutes: _viewModel.longBreakDurationMinutes,
+                                      onFocusMinutesChanged: (val) => _viewModel.updateDuration(PomodoroMode.focus, val),
+                                      onShortBreakMinutesChanged: (val) => _viewModel.updateDuration(PomodoroMode.shortBreak, val),
+                                      onLongBreakMinutesChanged: (val) => _viewModel.updateDuration(PomodoroMode.longBreak, val),
+                                    ),
+                                    const Spacer(),
+                                  ],
+                                  TimerRing(
+                                    secondsRemaining: _viewModel.secondsRemaining,
+                                    progress: _viewModel.progress,
+                                    accentColor: accentColor,
+                                    description: _viewModel.currentMode.description,
+                                  ),
+                                  const Spacer(),
+                                  ControlButtons(
+                                    isRunning: _viewModel.isRunning,
+                                    accentColor: accentColor,
+                                    onPlayPause: () {
+                                      if (_viewModel.isRunning) {
+                                        _viewModel.pauseTimer();
+                                      } else {
+                                        _viewModel.startTimer();
+                                      }
+                                    },
+                                    onReset: _viewModel.resetTimer,
+                                    onSkip: _viewModel.skipSession,
+                                  ),
+                                  const SizedBox(height: 40),
+                                ],
                               ),
-                              tooltip: 'Configure Session Durations',
                             ),
-                          ],
-                        ),
-                        const Spacer(),
-                        ModeSelector(
-                          currentMode: _viewModel.currentMode,
-                          onModeSelected: _viewModel.switchMode,
-                        ),
-                        const Spacer(),
-                        if (_showSettings) ...[
-                          SettingsPanel(
-                            focusMinutes: _viewModel.focusDurationMinutes,
-                            shortBreakMinutes: _viewModel.shortBreakDurationMinutes,
-                            longBreakMinutes: _viewModel.longBreakDurationMinutes,
-                            onFocusMinutesChanged: (val) => _viewModel.updateDuration(PomodoroMode.focus, val),
-                            onShortBreakMinutesChanged: (val) => _viewModel.updateDuration(PomodoroMode.shortBreak, val),
-                            onLongBreakMinutesChanged: (val) => _viewModel.updateDuration(PomodoroMode.longBreak, val),
                           ),
-                          const Spacer(),
-                        ],
-                        TimerRing(
-                          secondsRemaining: _viewModel.secondsRemaining,
-                          progress: _viewModel.progress,
-                          accentColor: accentColor,
-                          description: _viewModel.currentMode.description,
                         ),
-                        const Spacer(),
-                        ControlButtons(
-                          isRunning: _viewModel.isRunning,
-                          accentColor: accentColor,
-                          onPlayPause: () {
-                            if (_viewModel.isRunning) {
-                              _viewModel.pauseTimer();
-                            } else {
-                              _viewModel.startTimer();
-                            }
-                          },
-                          onReset: _viewModel.resetTimer,
-                          onSkip: _viewModel.skipSession,
-                        ),
-                        const SizedBox(height: 40),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ),
