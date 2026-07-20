@@ -8,7 +8,10 @@ PomoFlow is a production-grade, highly polished, and responsive Pomodoro Focus T
 
 - **Universal Responsiveness**: Designed using responsive constraints (centered and constrained to a maximum width of `600px`). It renders perfectly on web browsers, desktop windows, tablets, and mobile screens.
 - **Ambient Glassmorphic Aesthetic**: Immerse users in a sleek dark theme background (`#1E1E2C`) utilizing dynamic radial gradients that smoothly transition colorways depending on the active mode.
-- **Three Structured Timing Modes**:
+- **Dynamic Custom Durations**: Adjust Focus Session, Short Break, and Long Break session timings in real-time.
+- **Header Settings Toggle**: Toggle configuration panel visibility using a settings gear icon button in the header.
+- **Row Steppers**: Increment and decrement minutes using tactile `-` and `+` buttons, updating the active timer clock face instantly.
+- **Three Structured Timing Modes (Defaults)**:
   - **Focus Session**: 25 minutes | Red Accent Color (`#FF5252`)
   - **Short Break**: 5 minutes | Green Accent Color (`#4CAF50`)
   - **Long Break**: 15 minutes | Blue Accent Color (`#2196F3`)
@@ -20,7 +23,7 @@ PomoFlow is a production-grade, highly polished, and responsive Pomodoro Focus T
 
 ---
 
-## 🏗️ Architectural Design (MVVM)
+## 🏗️ Architecture Design (MVVM)
 
 PomoFlow is organized under a modular MVVM structure to separate visual layouts from state logic. This architecture ensures testability, modularity, and scalability.
 
@@ -36,13 +39,14 @@ pomodoro_focus_flutter_app/
 │   ├── models/
 │   │   └── pomodoro_mode.dart     # Data structures & properties for Pomodoro modes
 │   ├── viewmodels/
-│   │   └── pomodoro_viewmodel.dart# Timer states, loops, operations, change notifications
+│   │   └── pomodoro_viewmodel.dart# Timer states, custom durations, operations, change notifications
 │   └── views/
-│       ├── pomodoro_screen.dart   # Main screen binding VM notifications
+│       ├── pomodoro_screen.dart   # Main screen binding VM notifications & settings toggle
 │       └── widgets/
 │           ├── completion_dialog.dart # Session end blur modal
 │           ├── control_buttons.dart   # Play/Pause, Reset, Skip widgets
 │           ├── mode_selector.dart     # Capsule selector pills
+│           ├── settings_panel.dart    # Tap steppers configuring variable mode durations
 │           └── timer_ring.dart        # Digital timer text & progress rings
 ```
 
@@ -59,16 +63,17 @@ stateDiagram-v2
     Running --> Completed : secondsRemaining == 0
     Completed --> Idle : CompletionDialog.show() -> switchMode()
     Idle --> Idle : switchMode(mode) / skipSession()
+    Idle --> Idle : updateDuration(mode, mins) -> updates remaining time
 ```
 
 #### 1. Model Layer (`models/`)
-- Encapsulates properties mapping to each timer mode. It defines the raw timing parameters (minutes) and accent color representations cleanly away from the controller logic.
+- Encapsulates properties mapping to each timer mode. It defines the raw timing parameters and accent color representations cleanly away from the controller logic.
 
 #### 2. ViewModel Layer (`viewmodels/`)
-- Governs the business rules. It starts the timer ticking loop, calculates remaining fractions (`progress`), and fires `notifyListeners()` on changes. It exposes a callback `onSessionCompleted` to notify views of completed cycles.
+- Governs the business rules. It starts the timer ticking loop, maintains the user's custom duration limits for all three modes, clamps remaining durations if altered while active, and fires `notifyListeners()` on changes. It exposes a callback `onSessionCompleted` to notify views of completed cycles.
 
 #### 3. View Layer (`views/` & `widgets/`)
-- Composed of purely stateless visual representations (`TimerRing`, `ModeSelector`, `ControlButtons`) that accept configurations and forward actions to the ViewModel.
+- Composed of purely stateless visual representations (`TimerRing`, `ModeSelector`, `ControlButtons`, `SettingsPanel`) that accept configurations and forward actions to the ViewModel.
 - Bound to the ViewModel using `ListenableBuilder` to selectively rebuild the widget hierarchy when values change.
 
 ---
